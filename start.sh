@@ -6,11 +6,27 @@ BACKEND_PORT="${PORT:-4000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 
 if [[ ! -f "$ROOT_DIR/.env" ]]; then
-  cat <<'MSG'
-[BlueK9] Missing .env file at project root. Create one with MAPBOX_TOKEN, BLUEK9_USERNAME, BLUEK9_PASSWORD, DB_URL, SIMCOM7600_SERIAL_PORT, SIMCOM7600_BAUDRATE, VITE_MAPBOX_TOKEN, and VITE_API_BASE_URL before starting.
-MSG
-  exit 1
+  echo "[BlueK9] No .env detected. Creating one with sensible defaults..."
+  cat >"$ROOT_DIR/.env" <<EOF
+MAPBOX_TOKEN=pk.eyJ1Ijoiam1jY3VsbG91Z2g0IiwiYSI6ImNtMGJvOXh3cDBjNncya3B4cDg0MXFuYnUifQ.uDJKnqE9WgkvGXYGLge-NQ
+BLUEK9_USERNAME=bluek9
+BLUEK9_PASSWORD=warhammer
+DB_URL=postgres://bluek9:bluek9@localhost:5432/bluek9
+SIMCOM7600_SERIAL_PORT=/dev/ttyUSB2
+SIMCOM7600_BAUDRATE=115200
+VITE_MAPBOX_TOKEN=pk.eyJ1Ijoiam1jY3VsbG91Z2g0IiwiYSI6ImNtMGJvOXh3cDBjNncya3B4cDg0MXFuYnUifQ.uDJKnqE9WgkvGXYGLge-NQ
+VITE_API_BASE_URL=http://localhost:${BACKEND_PORT}
+EOF
 fi
+
+echo "[BlueK9] Loading environment from .env..."
+set -a
+source "$ROOT_DIR/.env"
+set +a
+
+# Re-resolve ports after loading .env in case they were defined there
+BACKEND_PORT="${PORT:-$BACKEND_PORT}"
+FRONTEND_PORT="${FRONTEND_PORT:-$FRONTEND_PORT}"
 
 echo "[BlueK9] Installing backend dependencies..."
 npm --prefix "$ROOT_DIR/backend" install
